@@ -95,18 +95,29 @@ var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
 function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
       selection = document.selectedLayers;
-  var aspectRatios = [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10];
-  selection.forEach(function (layer) {
-    layer.sketchObject.setConstrainProportions(0);
-    var ratio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)];
-    var frame = layer.frame;
-    var height = frame.height;
-    frame.width = Math.round(height * ratio);
-    layer.frame = frame;
-  });
 
   if (selection.length === 0) {
     UI.message('Select one or more layers');
+  } else {
+    var aspectRatios = [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10];
+    var padding = getPadding();
+    var orderedLayers = selection.map(function (layer) {
+      return layer;
+    }).sort(function (a, b) {
+      return a.frame.x - b.frame.x;
+    });
+    var firstLayer = orderedLayers[0];
+    var x = firstLayer.frame.x;
+    orderedLayers.forEach(function (layer) {
+      layer.sketchObject.setConstrainProportions(0);
+      var ratio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)];
+      var frame = layer.frame;
+      var height = frame.height;
+      frame.x = x;
+      frame.width = Math.round(height * ratio);
+      layer.frame = frame;
+      x += frame.width + padding;
+    });
   }
 }
 function onFit(context) {

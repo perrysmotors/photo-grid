@@ -31,7 +31,7 @@
       "settings"
     ]
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Size layers to common photo dimensions and scale them to fit in a row",
   "name": "Photo Grid",
   "disableCocoaScriptPreprocessor": true,
