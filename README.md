@@ -1,7 +1,7 @@
 # Photo Grid plugin for Sketch
 [![Download from Sketchpacks.com](https://badges.sketchpacks.com/plugins/com.gilesperry.photo-grid/version.svg)](https://api.sketchpacks.com/v1/plugins/com.gilesperry.photo-grid/download) [![Compatible Sketch Version](https://badges.sketchpacks.com/plugins/com.gilesperry.photo-grid/compatibility.svg)](https://sketchpacks.com/perrysmotors/photo-grid)
 
-A Sketch plugin that can size layers to common photo dimensions and scale them to fit a row.
+A Sketch plugin that can size layers to common photo dimensions and scale them to fit in a row.
 
 ## Features
 - Apply random aspect ratios to layer corresponding to common photo sizes.

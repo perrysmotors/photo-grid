@@ -1,6 +1,6 @@
 {
   "name": "photo_grid",
-  "description": "Size layers to common photo dimensions and scale them to fit a row",
+  "description": "Size layers to common photo dimensions and scale them to fit in a row",
   "author": "Giles Perry <giles@gilesperry.info> (http://gilesperry.info/)",
   "version": "1.0.0",
   "engines": {
