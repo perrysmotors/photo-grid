@@ -1,5 +1,6 @@
 const UI = require('sketch/ui'),
-      DOM = require('sketch/dom');
+      DOM = require('sketch/dom'),
+      Settings = require('sketch/settings');
 
 export function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
@@ -46,7 +47,7 @@ export function onFit(context) {
     let minX = firstLayer.frame.x;
     let maxX = lastLayer.frame.x + lastLayer.frame.width;
 
-    const padding = 16;
+    let padding = getPadding();
     let totalPadding = (selection.length - 1) * padding;
     let scale = (maxX - minX) / (totalWidth + totalPadding);
 
@@ -73,6 +74,30 @@ export function onFit(context) {
     lastLayer.frame = frame;
 
   }
+}
+
+export function onSettings(context) {
+  let padding = getPadding();
+  let input = UI.getStringFromUser("Enter a padding value", padding);
+  if (input != 'null') {
+    let value = parseInt(input);
+    if (isNaN(value) || input === '') {
+      UI.message('⚠️ The padding was not changed. Try entering a number.');
+    } else if (value < 0 || value > 1000) {
+      UI.message('⚠️ Enter a number between 0 and 1000');
+    } else {
+      Settings.setSettingForKey('padding', value);
+    }
+  }
+}
+
+function getPadding() {
+  let padding = Settings.settingForKey('padding');
+  if (padding === undefined) {
+    padding = 16;
+    Settings.setSettingForKey('padding', 16);
+  }
+  return padding;
 }
 
 function median(values) {
