@@ -6,24 +6,33 @@ export function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
       selection = document.selectedLayers;
 
-  const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
-
-  selection.forEach(layer => {
-
-    layer.sketchObject.setConstrainProportions(0);
-
-    let ratio = aspectRatios[Math.floor(Math.random()*aspectRatios.length)]
-    let frame = layer.frame;
-    let height = frame.height;
-
-    frame.width = Math.round(height * ratio);
-
-    layer.frame = frame;
-
-  });
-
   if (selection.length === 0) {
     UI.message('Select one or more layers');
+  } else {
+
+    const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
+    let padding = getPadding();
+
+    let orderedLayers = selection.map(layer => layer).sort((a, b) => a.frame.x - b.frame.x);
+    let firstLayer = orderedLayers[0];
+    let x = firstLayer.frame.x;
+
+    orderedLayers.forEach(layer => {
+
+      layer.sketchObject.setConstrainProportions(0);
+
+      let ratio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)]
+      let frame = layer.frame;
+      let height = frame.height;
+
+      frame.x = x;
+      frame.width = Math.round(height * ratio);
+
+      layer.frame = frame;
+
+      x += frame.width + padding;
+
+    });
   }
 
 }
