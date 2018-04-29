@@ -4,7 +4,7 @@
   "icon": "icon.png",
   "commands": [
     {
-      "name": "BLAH Randomize Aspect Ratios",
+      "name": "Randomize Aspect Ratios",
       "identifier": "randomizeAspectRatios",
       "script": "photo-grid.js",
       "handler": "onRandomizeAspectRatios"
@@ -24,7 +24,7 @@
     ]
   },
   "version": "1.0.0",
-  "description": "Size layers to common photo dimensions and scale them to fit a row",
+  "description": "Size layers to common photo dimensions and scale them to fit in a row",
   "name": "Photo Grid",
   "disableCocoaScriptPreprocessor": true,
   "appcast": "https://raw.githubusercontent.com/perrysmotors/photo-grid/master/.appcast.xml",
