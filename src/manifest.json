@@ -4,15 +4,23 @@
   "icon": "icon.png",
   "commands": [
     {
-      "name": "my-command",
-      "identifier": "my-command-identifier",
-      "script": "./my-command.js"
+      "name": "Randomize Aspect Ratios",
+      "identifier": "randomizeAspectRatios",
+      "script": "./photo-grid.js",
+      "handler": "onRandomizeAspectRatios"
+    },
+    {
+      "name": "Scale and Fit Row",
+      "identifier": "fit",
+      "script": "./photo-grid.js",
+      "handler": "onFit"
     }
   ],
   "menu": {
-    "title": "photo-grid",
+    "title": "Photo Grid",
     "items": [
-      "my-command-identifier"
+      "randomizeAspectRatios",
+      "fit"
     ]
   }
 }

@@ -1,13 +1,15 @@
 {
-  "name": "photo-grid",
-  "version": "0.1.0",
+  "name": "photo_grid",
+  "description": "Size layers to common photo dimensions and scale them to fit a row",
+  "author": "Giles Perry <giles@gilesperry.info> (http://gilesperry.info/)",
+  "version": "1.0.0",
   "engines": {
     "sketch": ">=3.0"
   },
   "skpm": {
-    "name": "photo-grid",
+    "name": "Photo Grid",
     "manifest": "src/manifest.json",
-    "main": "plugin.sketchplugin",
+    "main": "PhotoGrid.sketchplugin",
     "assets": [
       "assets/**/*"
     ]
@@ -18,8 +20,12 @@
     "start": "skpm-build --watch --run",
     "postinstall": "npm run build && skpm-link"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/perrysmotors/photo-grid.git"
+  },
+  "license": "MIT",
   "devDependencies": {
     "@skpm/builder": "^0.5.2"
-  },
-  "author": "Giles Perry <giles@gilesperry.info>"
+  }
 }
