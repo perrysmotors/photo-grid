@@ -1,5 +1,5 @@
 {
-  "compatibleVersion": 3,
+  "compatibleVersion": 49,
   "bundleVersion": 1,
   "icon": "icon.png",
   "commands": [
@@ -27,7 +27,7 @@
   "description": "Size layers to common photo dimensions and scale them to fit in a row",
   "name": "Photo Grid",
   "disableCocoaScriptPreprocessor": true,
-  "appcast": "https://raw.githubusercontent.com/perrysmotors/photo-grid/master/.appcast.xml",
+  "appcast": "https://api.sketchpacks.com/v1/plugins/com.gilesperry.photo-grid/appcast",
   "author": "Giles Perry",
   "authorEmail": "giles@gilesperry.info"
 }

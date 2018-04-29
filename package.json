@@ -9,6 +9,8 @@
   "skpm": {
     "name": "Photo Grid",
     "manifest": "src/manifest.json",
+    "identifier" : "com.gilesperry.photo-grid",
+    "appcast": "https://api.sketchpacks.com/v1/plugins/com.gilesperry.photo-grid/appcast",
     "main": "PhotoGrid.sketchplugin",
     "assets": [
       "assets/**/*"
