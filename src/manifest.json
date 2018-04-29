@@ -14,13 +14,21 @@
       "identifier": "fit",
       "script": "./photo-grid.js",
       "handler": "onFit"
+    },
+    {
+      "name": "Settings",
+      "identifier": "settings",
+      "script": "./photo-grid.js",
+      "handler": "onSettings"
     }
   ],
   "menu": {
     "title": "Photo Grid",
     "items": [
       "randomizeAspectRatios",
-      "fit"
+      "fit",
+      "-",
+      "settings"
     ]
   }
 }

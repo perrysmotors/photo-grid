@@ -80,15 +80,17 @@ var exports =
 /*!***************************!*\
   !*** ./src/photo-grid.js ***!
   \***************************/
-/*! exports provided: onRandomizeAspectRatios, onFit */
+/*! exports provided: onRandomizeAspectRatios, onFit, onSettings */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "onRandomizeAspectRatios", function() { return onRandomizeAspectRatios; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "onFit", function() { return onFit; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "onSettings", function() { return onSettings; });
 var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
-    DOM = __webpack_require__(/*! sketch/dom */ "sketch/dom");
+    DOM = __webpack_require__(/*! sketch/dom */ "sketch/dom"),
+    Settings = __webpack_require__(/*! sketch/settings */ "sketch/settings");
 
 function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
@@ -132,7 +134,7 @@ function onFit(context) {
     });
     var minX = firstLayer.frame.x;
     var maxX = lastLayer.frame.x + lastLayer.frame.width;
-    var padding = 16;
+    var padding = getPadding();
     var totalPadding = (selection.length - 1) * padding;
     var scale = (maxX - minX) / (totalWidth + totalPadding);
     var x = minX;
@@ -151,6 +153,33 @@ function onFit(context) {
     frame.width = maxX - frame.x;
     lastLayer.frame = frame;
   }
+}
+function onSettings(context) {
+  var padding = getPadding();
+  var input = UI.getStringFromUser("Enter a padding value", padding);
+
+  if (input != 'null') {
+    var value = parseInt(input);
+
+    if (isNaN(value) || input === '') {
+      UI.message('⚠️ The padding was not changed. Try entering a number.');
+    } else if (value < 0 || value > 1000) {
+      UI.message('⚠️ Enter a number between 0 and 1000');
+    } else {
+      Settings.setSettingForKey('padding', value);
+    }
+  }
+}
+
+function getPadding() {
+  var padding = Settings.settingForKey('padding');
+
+  if (padding === undefined) {
+    padding = 16;
+    Settings.setSettingForKey('padding', 16);
+  }
+
+  return padding;
 }
 
 function median(values) {
@@ -179,6 +208,17 @@ module.exports = require("sketch/dom");
 
 /***/ }),
 
+/***/ "sketch/settings":
+/*!**********************************!*\
+  !*** external "sketch/settings" ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("sketch/settings");
+
+/***/ }),
+
 /***/ "sketch/ui":
 /*!****************************!*\
   !*** external "sketch/ui" ***!
@@ -199,6 +239,7 @@ module.exports = require("sketch/ui");
 }
 that['onRandomizeAspectRatios'] = __skpm_run.bind(this, 'onRandomizeAspectRatios');
 that['onRun'] = __skpm_run.bind(this, 'default');
-that['onFit'] = __skpm_run.bind(this, 'onFit')
+that['onFit'] = __skpm_run.bind(this, 'onFit');
+that['onSettings'] = __skpm_run.bind(this, 'onSettings')
 
 //# sourceMappingURL=photo-grid.js.map
