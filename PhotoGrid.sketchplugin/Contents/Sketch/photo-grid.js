@@ -93,7 +93,7 @@ var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
     Settings = __webpack_require__(/*! sketch/settings */ "sketch/settings");
 
 var options = {
-  isRowLayout: false,
+  isRowLayout: true,
   padding: getPadding(),
   aspectRatios: [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10]
 };
