@@ -2,11 +2,10 @@ const UI = require('sketch/ui'),
       DOM = require('sketch/dom'),
       Settings = require('sketch/settings');
 
-const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
-
 var options = {
   isRowLayout: true,
-  padding: getPadding()
+  padding: getPadding(),
+  aspectRatios: [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10]
 };
 
 export function onRandomizeAspectRatios(context) {
@@ -22,7 +21,7 @@ export function onRandomizeAspectRatios(context) {
     // let i = 1;
 
     groups.forEach(group => {
-      randomizeAspectRatios(group, bounds.x);
+      randomizeAspectRatios(group, bounds);
       // numberLayers(group, `Group ${i++}`);
     });
   }
@@ -63,35 +62,47 @@ export function onSettings(context) {
   }
 }
 
-function randomizeAspectRatios(layers, x, y) {
+function randomizeAspectRatios(layers, bounds) {
+  let orderedLayers;
 
-  let orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x());
-  let firstLayer = orderedLayers[0];
+  let x = bounds.x,
+      y = bounds.y;
 
-  x = x || firstLayer.sketchObject.absoluteRect().x();
-  y = y || firstLayer.sketchObject.absoluteRect().y();
+  if (options.isRowLayout) {
+    orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x());
+    y = orderedLayers[0].sketchObject.absoluteRect().y();
+  } else {
+    orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().y() - b.sketchObject.absoluteRect().y());
+    x = orderedLayers[0].sketchObject.absoluteRect().x();
+  }
 
   orderedLayers.forEach(layer => {
 
     layer.sketchObject.setConstrainProportions(0);
 
-    let absoluteRect = layer.sketchObject.absoluteRect();
-    let ratio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)]
-    let frame = layer.frame;
-    let height = frame.height;
-
     let delta = getDelta(layer, x, y);
+    let ratio = randomAspectRatio()
+    let frame = layer.frame;
 
     frame.x += delta.x;
     frame.y += delta.y;
-    frame.width = Math.round(height * ratio);
+
+    if (options.isRowLayout) {
+      frame.width = Math.round(frame.height * ratio);
+      x += frame.width + options.padding;
+    } else {
+      frame.height = Math.round(frame.width / ratio);
+      y += frame.height + options.padding;
+    }
 
     layer.frame = frame;
 
-    x += frame.width + options.padding;
-
   });
 
+}
+
+function randomAspectRatio() {
+  return options.aspectRatios[Math.floor(Math.random() * options.aspectRatios.length)]
 }
 
 function fitLayers(layers, minX, maxX, y) {
