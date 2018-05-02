@@ -10,7 +10,7 @@
       "handler": "onRandomizeAspectRatios"
     },
     {
-      "name": "Scale and Fit Row",
+      "name": "Scale and Fit Rows",
       "identifier": "fit",
       "script": "./photo-grid.js",
       "handler": "onFit"
