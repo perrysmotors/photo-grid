@@ -92,10 +92,10 @@ var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
     DOM = __webpack_require__(/*! sketch/dom */ "sketch/dom"),
     Settings = __webpack_require__(/*! sketch/settings */ "sketch/settings");
 
-var aspectRatios = [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10];
 var options = {
   isRowLayout: true,
-  padding: getPadding()
+  padding: getPadding(),
+  aspectRatios: [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10]
 };
 function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
@@ -108,7 +108,7 @@ function onRandomizeAspectRatios(context) {
     var groups = findGroups(selection.layers); // let i = 1;
 
     groups.forEach(function (group) {
-      randomizeAspectRatios(group, bounds.x); // numberLayers(group, `Group ${i++}`);
+      randomizeAspectRatios(group, bounds); // numberLayers(group, `Group ${i++}`);
     });
   }
 }
@@ -120,13 +120,21 @@ function onFit(context) {
     UI.message('Select one or more layers');
   } else {
     var bounds = getBoundingBox(selection.layers);
-    var groups = findGroups(selection.layers); // let i = 1;
+    var groups = findGroups(selection.layers);
 
-    var y = bounds.y;
-    groups.forEach(function (group) {
-      fitLayers(group, bounds.x, bounds.x + bounds.width, y);
-      y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
-    });
+    if (options.isRowLayout) {
+      var y = bounds.y;
+      groups.forEach(function (group) {
+        fitLayersInRows(group, bounds, y);
+        y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
+      });
+    } else {
+      var x = bounds.x;
+      groups.forEach(function (group) {
+        fitLayersInColumns(group, bounds, x);
+        x = group[0].sketchObject.absoluteRect().x() + group[0].frame.width + getPadding();
+      });
+    }
   }
 }
 function onSettings(context) {
@@ -146,33 +154,53 @@ function onSettings(context) {
   }
 }
 
-function randomizeAspectRatios(layers, x, y) {
-  var orderedLayers = layers.sort(function (a, b) {
-    return a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x();
-  });
-  var firstLayer = orderedLayers[0];
-  x = x || firstLayer.sketchObject.absoluteRect().x();
-  y = y || firstLayer.sketchObject.absoluteRect().y();
+function randomizeAspectRatios(layers, bounds) {
+  var orderedLayers;
+  var x = bounds.x,
+      y = bounds.y;
+
+  if (options.isRowLayout) {
+    orderedLayers = layers.sort(function (a, b) {
+      return a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x();
+    });
+    y = orderedLayers[0].sketchObject.absoluteRect().y();
+  } else {
+    orderedLayers = layers.sort(function (a, b) {
+      return a.sketchObject.absoluteRect().y() - b.sketchObject.absoluteRect().y();
+    });
+    x = orderedLayers[0].sketchObject.absoluteRect().x();
+  }
+
   orderedLayers.forEach(function (layer) {
     layer.sketchObject.setConstrainProportions(0);
-    var absoluteRect = layer.sketchObject.absoluteRect();
-    var ratio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)];
-    var frame = layer.frame;
-    var height = frame.height;
+    var ratio = randomAspectRatio();
     var delta = getDelta(layer, x, y);
+    var frame = layer.frame;
     frame.x += delta.x;
     frame.y += delta.y;
-    frame.width = Math.round(height * ratio);
+
+    if (options.isRowLayout) {
+      frame.width = Math.round(frame.height * ratio);
+      x += frame.width + options.padding;
+    } else {
+      frame.height = Math.round(frame.width / ratio);
+      y += frame.height + options.padding;
+    }
+
     layer.frame = frame;
-    x += frame.width + options.padding;
   });
 }
 
-function fitLayers(layers, minX, maxX, y) {
+function randomAspectRatio() {
+  return options.aspectRatios[Math.floor(Math.random() * options.aspectRatios.length)];
+}
+
+function fitLayersInRows(layers, bounds, y) {
+  var min = bounds.x;
+  var max = bounds.x + bounds.width;
   var orderedLayers = layers.sort(function (a, b) {
     return a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x();
   });
-  var firstLayer = orderedLayers[0];
   var lastLayer = orderedLayers[orderedLayers.length - 1];
   var height = Math.round(median(layers.map(function (layer) {
     return layer.frame.height;
@@ -183,25 +211,57 @@ function fitLayers(layers, minX, maxX, y) {
   var totalWidth = widths.reduce(function (total, current) {
     return total + current;
   });
-  minX = minX || firstLayer.sketchObject.absoluteRect().x();
-  maxX = maxX || lastLayer.sketchObject.absoluteRect().x() + lastLayer.frame.width;
   var totalPadding = (layers.length - 1) * options.padding;
-  var scale = (maxX - minX) / (totalWidth + totalPadding);
-  var x = minX;
-  y = y || firstLayer.sketchObject.absoluteRect().y();
+  var scale = (max - min) / (totalWidth + totalPadding);
+  var x = min;
   orderedLayers.forEach(function (layer) {
     layer.sketchObject.setConstrainProportions(0);
-    var frame = layer.frame;
     var delta = getDelta(layer, x, y);
+    var frame = layer.frame;
     frame.x += delta.x;
     frame.y += delta.y;
     frame.width = Math.round(frame.width * height / frame.height * scale);
     frame.height = Math.round(height * scale);
-    layer.frame = frame;
     x += frame.width + options.padding;
+    layer.frame = frame;
   });
   var frame = lastLayer.frame;
-  frame.width = maxX - lastLayer.sketchObject.absoluteRect().x();
+  frame.width = max - lastLayer.sketchObject.absoluteRect().x();
+  lastLayer.frame = frame;
+}
+
+function fitLayersInColumns(layers, bounds, x) {
+  var min = bounds.y;
+  var max = bounds.y + bounds.height;
+  var orderedLayers = layers.sort(function (a, b) {
+    return a.sketchObject.absoluteRect().y() - b.sketchObject.absoluteRect().y();
+  });
+  var lastLayer = orderedLayers[orderedLayers.length - 1];
+  var width = Math.round(median(layers.map(function (layer) {
+    return layer.frame.width;
+  })));
+  var heights = layers.map(function (layer) {
+    return layer.frame.height * width / layer.frame.width;
+  });
+  var totalHeight = heights.reduce(function (total, current) {
+    return total + current;
+  });
+  var totalPadding = (layers.length - 1) * options.padding;
+  var scale = (max - min) / (totalHeight + totalPadding);
+  var y = min;
+  orderedLayers.forEach(function (layer) {
+    layer.sketchObject.setConstrainProportions(0);
+    var delta = getDelta(layer, x, y);
+    var frame = layer.frame;
+    frame.x += delta.x;
+    frame.y += delta.y;
+    frame.height = Math.round(frame.height * width / frame.width * scale);
+    frame.width = Math.round(width * scale);
+    y += frame.height + options.padding;
+    layer.frame = frame;
+  });
+  var frame = lastLayer.frame;
+  frame.height = max - lastLayer.sketchObject.absoluteRect().y();
   lastLayer.frame = frame;
 }
 

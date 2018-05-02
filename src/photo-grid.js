@@ -37,13 +37,23 @@ export function onFit(context) {
     let bounds = getBoundingBox(selection.layers);
     let groups = findGroups(selection.layers);
 
-    // let i = 1;
-    let y = bounds.y;
+    if (options.isRowLayout) {
 
-    groups.forEach(group => {
-      fitLayers(group, bounds.x, bounds.x + bounds.width, y);
-      y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
-    });
+      let y = bounds.y;
+      groups.forEach(group => {
+        fitLayersInRows(group, bounds, y);
+        y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
+      });
+
+    } else {
+
+      let x = bounds.x;
+      groups.forEach(group => {
+        fitLayersInColumns(group, bounds, x);
+        x = group[0].sketchObject.absoluteRect().x() + group[0].frame.width + getPadding();
+      });
+
+    }
   }
 }
 
@@ -80,8 +90,8 @@ function randomizeAspectRatios(layers, bounds) {
 
     layer.sketchObject.setConstrainProportions(0);
 
+    let ratio = randomAspectRatio();
     let delta = getDelta(layer, x, y);
-    let ratio = randomAspectRatio()
     let frame = layer.frame;
 
     frame.x += delta.x;
@@ -105,45 +115,82 @@ function randomAspectRatio() {
   return options.aspectRatios[Math.floor(Math.random() * options.aspectRatios.length)]
 }
 
-function fitLayers(layers, minX, maxX, y) {
+function fitLayersInRows(layers, bounds, y) {
+  let min = bounds.x;
+  let max = bounds.x + bounds.width;
 
   let orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x());
-  let firstLayer = orderedLayers[0];
   let lastLayer = orderedLayers[orderedLayers.length - 1];
 
   let height = Math.round(median(layers.map(layer => layer.frame.height)));
   let widths = layers.map(layer => layer.frame.width * height / layer.frame.height);
   let totalWidth = widths.reduce((total, current) => total + current);
 
-  minX = minX || firstLayer.sketchObject.absoluteRect().x();
-  maxX = maxX || lastLayer.sketchObject.absoluteRect().x() + lastLayer.frame.width;
-
   let totalPadding = (layers.length - 1) * options.padding;
-  let scale = (maxX - minX) / (totalWidth + totalPadding);
+  let scale = (max - min) / (totalWidth + totalPadding);
 
-  let x = minX;
-  y = y || firstLayer.sketchObject.absoluteRect().y();
+  let x = min;
 
   orderedLayers.forEach(layer => {
 
     layer.sketchObject.setConstrainProportions(0);
 
-    let frame = layer.frame;
-
     let delta = getDelta(layer, x, y);
+    let frame = layer.frame;
 
     frame.x += delta.x;
     frame.y += delta.y;
+
     frame.width = Math.round(frame.width * height / frame.height * scale);
     frame.height = Math.round(height * scale);
-    layer.frame = frame;
-
     x += frame.width + options.padding;
+
+    layer.frame = frame;
 
   });
 
   let frame = lastLayer.frame;
-  frame.width = maxX - lastLayer.sketchObject.absoluteRect().x();
+  frame.width = max - lastLayer.sketchObject.absoluteRect().x();
+  lastLayer.frame = frame;
+
+}
+
+function fitLayersInColumns(layers, bounds, x) {
+  let min = bounds.y;
+  let max = bounds.y + bounds.height;
+
+  let orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().y() - b.sketchObject.absoluteRect().y());
+  let lastLayer = orderedLayers[orderedLayers.length - 1];
+
+  let width = Math.round(median(layers.map(layer => layer.frame.width)));
+  let heights = layers.map(layer => layer.frame.height * width / layer.frame.width);
+  let totalHeight = heights.reduce((total, current) => total + current);
+
+  let totalPadding = (layers.length - 1) * options.padding;
+  let scale = (max - min) / (totalHeight + totalPadding);
+
+  let y = min;
+
+  orderedLayers.forEach(layer => {
+
+    layer.sketchObject.setConstrainProportions(0);
+
+    let delta = getDelta(layer, x, y);
+    let frame = layer.frame;
+
+    frame.x += delta.x;
+    frame.y += delta.y;
+
+    frame.height = Math.round(frame.height * width / frame.width * scale);
+    frame.width = Math.round(width * scale);
+    y += frame.height + options.padding;
+
+    layer.frame = frame;
+
+  });
+
+  let frame = lastLayer.frame;
+  frame.height = max - lastLayer.sketchObject.absoluteRect().y();
   lastLayer.frame = frame;
 
 }
@@ -154,7 +201,6 @@ function getDelta(layer, x, y) {
   let deltaY = y - absoluteRect.y();
   return {x: deltaX, y: deltaY};
 }
-
 
 function findGroups(layers) {
   let groups = [];
