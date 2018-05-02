@@ -36,7 +36,7 @@ export function onFit(context) {
 
     rows.forEach(row => {
       fitLayers(row, bounds.x, bounds.x + bounds.width, y);
-      y = row[0].frame.y + row[0].frame.height + getPadding();
+      y = row[0].sketchObject.absoluteRect().y() + row[0].frame.height + getPadding();
     });
   }
 }
@@ -61,22 +61,25 @@ function randomizeAspectRatios(layers, x, y) {
   const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
   let padding = getPadding();
 
-  let orderedLayers = layers.sort((a, b) => a.frame.x - b.frame.x);
+  let orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x());
   let firstLayer = orderedLayers[0];
 
-  x = x || firstLayer.frame.x;
-  y = y || firstLayer.frame.y;
+  x = x || firstLayer.sketchObject.absoluteRect().x();
+  y = y || firstLayer.sketchObject.absoluteRect().y();
 
   orderedLayers.forEach(layer => {
 
     layer.sketchObject.setConstrainProportions(0);
 
+    let absoluteRect = layer.sketchObject.absoluteRect();
     let ratio = aspectRatios[Math.floor(Math.random() * aspectRatios.length)]
     let frame = layer.frame;
     let height = frame.height;
 
-    frame.x = x;
-    frame.y = y;
+    let delta = getDelta(layer, x, y);
+
+    frame.x += delta.x;
+    frame.y += delta.y;
     frame.width = Math.round(height * ratio);
 
     layer.frame = frame;
@@ -89,7 +92,7 @@ function randomizeAspectRatios(layers, x, y) {
 
 function fitLayers(layers, minX, maxX, y) {
 
-  let orderedLayers = layers.sort((a, b) => a.frame.x - b.frame.x);
+  let orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x());
   let firstLayer = orderedLayers[0];
   let lastLayer = orderedLayers[orderedLayers.length - 1];
 
@@ -97,23 +100,26 @@ function fitLayers(layers, minX, maxX, y) {
   let widths = layers.map(layer => layer.frame.width * height / layer.frame.height);
   let totalWidth = widths.reduce((total, current) => total + current);
 
-  minX = minX || firstLayer.frame.x;
-  maxX = maxX || lastLayer.frame.x + lastLayer.frame.width;
+  minX = minX || firstLayer.sketchObject.absoluteRect().x();
+  maxX = maxX || lastLayer.sketchObject.absoluteRect().x() + lastLayer.frame.width;
 
   let padding = getPadding();
   let totalPadding = (layers.length - 1) * padding;
   let scale = (maxX - minX) / (totalWidth + totalPadding);
 
   let x = minX;
-  y = y || firstLayer.frame.y;
+  y = y || firstLayer.sketchObject.absoluteRect().y();
 
   orderedLayers.forEach(layer => {
 
     layer.sketchObject.setConstrainProportions(0);
 
     let frame = layer.frame;
-    frame.x = x;
-    frame.y = y;
+
+    let delta = getDelta(layer, x, y);
+
+    frame.x += delta.x;
+    frame.y += delta.y;
     frame.width = Math.round(frame.width * height / frame.height * scale);
     frame.height = Math.round(height * scale);
     layer.frame = frame;
@@ -123,10 +129,18 @@ function fitLayers(layers, minX, maxX, y) {
   });
 
   let frame = lastLayer.frame;
-  frame.width = maxX - frame.x;
+  frame.width = maxX - lastLayer.sketchObject.absoluteRect().x();
   lastLayer.frame = frame;
 
 }
+
+function getDelta(layer, x, y) {
+  let absoluteRect = layer.sketchObject.absoluteRect();
+  let deltaX = x - absoluteRect.x();
+  let deltaY = y - absoluteRect.y();
+  return {x: deltaX, y: deltaY};
+}
+
 
 function findRows(layers) {
   let rows = [];
@@ -149,7 +163,7 @@ function findRows(layers) {
     rows.push(largestRow);
   }
 
-  return rows.sort((rowA, rowB) => rowA[0].frame.y - rowB[0].frame.y);
+  return rows.sort((rowA, rowB) => rowA[0].sketchObject.absoluteRect().y() - rowB[0].sketchObject.absoluteRect().y());
 }
 
 function findLayersInRow(layers, referenceLayer, rowHeight) {
@@ -190,10 +204,10 @@ function median(values) {
 }
 
 function getBoundingBox(layers) {
-  let lefts = layers.map(layer => layer.frame.x).sort((a, b) => a - b);
-  let rights = layers.map(layer => layer.frame.x + layer.frame.width).sort((a, b) => a - b);
-  let tops = layers.map(layer => layer.frame.y).sort((a, b) => a - b);
-  let bottoms = layers.map(layer => layer.frame.y + layer.frame.height).sort((a, b) => a - b);
+  let lefts = layers.map(layer => layer.sketchObject.absoluteRect().x()).sort((a, b) => a - b);
+  let rights = layers.map(layer => layer.sketchObject.absoluteRect().x() + layer.frame.width).sort((a, b) => a - b);
+  let tops = layers.map(layer => layer.sketchObject.absoluteRect().y()).sort((a, b) => a - b);
+  let bottoms = layers.map(layer => layer.sketchObject.absoluteRect().y() + layer.frame.height).sort((a, b) => a - b);
   return {
     x: lefts[0],
     y: tops[0],
@@ -203,12 +217,12 @@ function getBoundingBox(layers) {
 }
 
 function getLayerCentre(layer) {
-  return layer.frame.y + layer.frame.height / 2;
+  return layer.sketchObject.absoluteRect().y() + layer.frame.height / 2;
 }
 
 // function compareFlowOrder(layerA, layerB) {
-//   let valueA = layerA.frame.x + layerA.frame.y * 1000;
-//   let valueB = layerB.frame.x + layerB.frame.y * 1000;
+//   let valueA = layerA.sketchObject.absoluteRect().x() + layerA.sketchObject.absoluteRect().y() * 1000;
+//   let valueB = layerB.sketchObject.absoluteRect().x() + layerB.sketchObject.absoluteRect().y() * 1000;
 //   return valueA - valueB;
 // }
 
