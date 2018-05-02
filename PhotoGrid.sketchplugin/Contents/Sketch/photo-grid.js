@@ -92,6 +92,9 @@ var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
     DOM = __webpack_require__(/*! sketch/dom */ "sketch/dom"),
     Settings = __webpack_require__(/*! sketch/settings */ "sketch/settings");
 
+var settings = {
+  isRowLayout: true
+};
 function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
       selection = document.selectedLayers;
@@ -100,10 +103,10 @@ function onRandomizeAspectRatios(context) {
     UI.message('Select one or more layers');
   } else {
     var bounds = getBoundingBox(selection.layers);
-    var rows = findRows(selection.layers); // let i = 1;
+    var groups = findGroups(selection.layers); // let i = 1;
 
-    rows.forEach(function (row) {
-      randomizeAspectRatios(row, bounds.x); // numberLayers(row, `Row ${i++}`);
+    groups.forEach(function (group) {
+      randomizeAspectRatios(group, bounds.x); // numberLayers(group, `Group ${i++}`);
     });
   }
 }
@@ -115,12 +118,12 @@ function onFit(context) {
     UI.message('Select one or more layers');
   } else {
     var bounds = getBoundingBox(selection.layers);
-    var rows = findRows(selection.layers); // let i = 1;
+    var groups = findGroups(selection.layers); // let i = 1;
 
     var y = bounds.y;
-    rows.forEach(function (row) {
-      fitLayers(row, bounds.x, bounds.x + bounds.width, y);
-      y = row[0].sketchObject.absoluteRect().y() + row[0].frame.height + getPadding();
+    groups.forEach(function (group) {
+      fitLayers(group, bounds.x, bounds.x + bounds.width, y);
+      y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
     });
   }
 }
@@ -213,50 +216,80 @@ function getDelta(layer, x, y) {
   };
 }
 
-function findRows(layers) {
-  var rows = [];
+function findGroups(layers) {
+  var groups = [];
   var remainingLayers = new Set(layers);
-  var medianRowHeight = Math.round(median(layers.map(function (layer) {
-    return layer.frame.height;
-  })));
+  var range;
+
+  if (settings.isRowLayout) {
+    range = Math.round(median(layers.map(function (layer) {
+      return layer.frame.height;
+    })));
+  } else {
+    range = Math.round(median(layers.map(function (layer) {
+      return layer.frame.width;
+    })));
+  }
 
   var _loop = function _loop() {
-    var largestRow = [];
+    var largestGroup = [];
     remainingLayers.forEach(function (layer) {
-      var row = findLayersInRow(remainingLayers, layer, medianRowHeight);
+      var group = findLayersInGroup(remainingLayers, layer, range);
 
-      if (row.length > largestRow.length) {
-        largestRow = row;
+      if (group.length > largestGroup.length) {
+        largestGroup = group;
       }
     });
-    largestRow.forEach(function (layer) {
+    largestGroup.forEach(function (layer) {
       remainingLayers.delete(layer);
     });
-    rows.push(largestRow);
+    groups.push(largestGroup);
   };
 
   while (remainingLayers.size > 0) {
     _loop();
   }
 
-  return rows.sort(function (rowA, rowB) {
-    return rowA[0].sketchObject.absoluteRect().y() - rowB[0].sketchObject.absoluteRect().y();
-  });
+  if (settings.isRowLayout) {
+    return groups.sort(function (groupA, groupB) {
+      return groupA[0].sketchObject.absoluteRect().y() - groupB[0].sketchObject.absoluteRect().y();
+    });
+  } else {
+    return groups.sort(function (groupA, groupB) {
+      return groupA[0].sketchObject.absoluteRect().x() - groupB[0].sketchObject.absoluteRect().x();
+    });
+  }
 }
 
-function findLayersInRow(layers, referenceLayer, rowHeight) {
+function findLayersInGroup(layers, referenceLayer, range) {
+  var found = [];
   var rowCentre = getLayerCentre(referenceLayer);
-  var top = rowCentre - rowHeight / 2;
-  var bottom = rowCentre + rowHeight / 2;
-  var layersInRow = [];
-  layers.forEach(function (layer) {
-    var centre = getLayerCentre(layer);
 
-    if (centre > top && centre < bottom) {
-      layersInRow.push(layer);
-    }
-  });
-  return layersInRow;
+  if (settings.isRowLayout) {
+    var lower = rowCentre.y - range / 2;
+    var upper = rowCentre.y + range / 2;
+    layers.forEach(function (layer) {
+      var centre = getLayerCentre(layer);
+
+      if (centre.y > lower && centre.y < upper) {
+        found.push(layer);
+      }
+    });
+  } else {
+    var _lower = rowCentre.x - range / 2;
+
+    var _upper = rowCentre.x + range / 2;
+
+    layers.forEach(function (layer) {
+      var centre = getLayerCentre(layer);
+
+      if (centre.x > _lower && centre.x < _upper) {
+        found.push(layer);
+      }
+    });
+  }
+
+  return found;
 }
 
 function getPadding() {
@@ -313,7 +346,10 @@ function getBoundingBox(layers) {
 }
 
 function getLayerCentre(layer) {
-  return layer.sketchObject.absoluteRect().y() + layer.frame.height / 2;
+  return {
+    x: layer.sketchObject.absoluteRect().x() + layer.frame.width / 2,
+    y: layer.sketchObject.absoluteRect().y() + layer.frame.height / 2
+  };
 } // function compareFlowOrder(layerA, layerB) {
 //   let valueA = layerA.sketchObject.absoluteRect().x() + layerA.sketchObject.absoluteRect().y() * 1000;
 //   let valueB = layerB.sketchObject.absoluteRect().x() + layerB.sketchObject.absoluteRect().y() * 1000;

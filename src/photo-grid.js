@@ -2,6 +2,10 @@ const UI = require('sketch/ui'),
       DOM = require('sketch/dom'),
       Settings = require('sketch/settings');
 
+var settings = {
+  isRowLayout: true
+};
+
 export function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
       selection = document.selectedLayers;
@@ -10,13 +14,13 @@ export function onRandomizeAspectRatios(context) {
     UI.message('Select one or more layers');
   } else {
     let bounds = getBoundingBox(selection.layers);
-    let rows = findRows(selection.layers);
+    let groups = findGroups(selection.layers);
 
     // let i = 1;
 
-    rows.forEach(row => {
-      randomizeAspectRatios(row, bounds.x);
-      // numberLayers(row, `Row ${i++}`);
+    groups.forEach(group => {
+      randomizeAspectRatios(group, bounds.x);
+      // numberLayers(group, `Group ${i++}`);
     });
   }
 }
@@ -29,14 +33,14 @@ export function onFit(context) {
     UI.message('Select one or more layers');
   } else {
     let bounds = getBoundingBox(selection.layers);
-    let rows = findRows(selection.layers);
+    let groups = findGroups(selection.layers);
 
     // let i = 1;
     let y = bounds.y;
 
-    rows.forEach(row => {
-      fitLayers(row, bounds.x, bounds.x + bounds.width, y);
-      y = row[0].sketchObject.absoluteRect().y() + row[0].frame.height + getPadding();
+    groups.forEach(group => {
+      fitLayers(group, bounds.x, bounds.x + bounds.width, y);
+      y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
     });
   }
 }
@@ -142,45 +146,73 @@ function getDelta(layer, x, y) {
 }
 
 
-function findRows(layers) {
-  let rows = [];
+function findGroups(layers) {
+  let groups = [];
   let remainingLayers = new Set(layers);
-  let medianRowHeight = Math.round(median(layers.map(layer => layer.frame.height)));
+
+  let range;
+  if (settings.isRowLayout) {
+    range = Math.round(median(layers.map(layer => layer.frame.height)));
+  } else {
+    range = Math.round(median(layers.map(layer => layer.frame.width)));
+  }
 
   while (remainingLayers.size > 0) {
-    let largestRow = [];
+    let largestGroup = [];
     remainingLayers.forEach(layer => {
-      let row = findLayersInRow(remainingLayers, layer, medianRowHeight);
-      if (row.length > largestRow.length) {
-        largestRow = row;
+      let group = findLayersInGroup(remainingLayers, layer, range);
+      if (group.length > largestGroup.length) {
+        largestGroup = group;
       }
     });
 
-    largestRow.forEach(layer => {
+    largestGroup.forEach(layer => {
       remainingLayers.delete(layer);
     });
 
-    rows.push(largestRow);
+    groups.push(largestGroup);
   }
 
-  return rows.sort((rowA, rowB) => rowA[0].sketchObject.absoluteRect().y() - rowB[0].sketchObject.absoluteRect().y());
+  if (settings.isRowLayout) {
+    return groups.sort((groupA, groupB) => groupA[0].sketchObject.absoluteRect().y() - groupB[0].sketchObject.absoluteRect().y());
+  } else {
+    return groups.sort((groupA, groupB) => groupA[0].sketchObject.absoluteRect().x() - groupB[0].sketchObject.absoluteRect().x());
+  }
+
 }
 
-function findLayersInRow(layers, referenceLayer, rowHeight) {
+function findLayersInGroup(layers, referenceLayer, range) {
 
+  let found = [];
   let rowCentre = getLayerCentre(referenceLayer);
-  let top = rowCentre - rowHeight / 2;
-  let bottom = rowCentre + rowHeight / 2;
-  let layersInRow = [];
 
-  layers.forEach(layer => {
-    let centre = getLayerCentre(layer);
-    if (centre > top && centre < bottom) {
-      layersInRow.push(layer);
-    }
-  });
+  if (settings.isRowLayout) {
 
-  return layersInRow;
+    let lower = rowCentre.y - range / 2;
+    let upper = rowCentre.y + range / 2;
+
+    layers.forEach(layer => {
+      let centre = getLayerCentre(layer);
+      if (centre.y > lower && centre.y < upper) {
+        found.push(layer);
+      }
+    });
+
+  } else {
+
+    let lower = rowCentre.x - range / 2;
+    let upper = rowCentre.x + range / 2;
+
+    layers.forEach(layer => {
+      let centre = getLayerCentre(layer);
+      if (centre.x > lower && centre.x < upper) {
+        found.push(layer);
+      }
+    });
+
+  }
+
+  return found;
 }
 
 function getPadding() {
@@ -217,7 +249,10 @@ function getBoundingBox(layers) {
 }
 
 function getLayerCentre(layer) {
-  return layer.sketchObject.absoluteRect().y() + layer.frame.height / 2;
+  return {
+    x: layer.sketchObject.absoluteRect().x() + layer.frame.width / 2,
+    y: layer.sketchObject.absoluteRect().y() + layer.frame.height / 2
+  };
 }
 
 // function compareFlowOrder(layerA, layerB) {
