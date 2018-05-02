@@ -18,11 +18,8 @@ export function onRandomizeAspectRatios(context) {
     let bounds = getBoundingBox(selection.layers);
     let groups = findGroups(selection.layers);
 
-    // let i = 1;
-
     groups.forEach(group => {
       randomizeAspectRatios(group, bounds);
-      // numberLayers(group, `Group ${i++}`);
     });
   }
 }
