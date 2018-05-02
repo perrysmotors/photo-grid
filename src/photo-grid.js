@@ -2,8 +2,11 @@ const UI = require('sketch/ui'),
       DOM = require('sketch/dom'),
       Settings = require('sketch/settings');
 
-var settings = {
-  isRowLayout: true
+const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
+
+var options = {
+  isRowLayout: true,
+  padding: getPadding()
 };
 
 export function onRandomizeAspectRatios(context) {
@@ -46,8 +49,7 @@ export function onFit(context) {
 }
 
 export function onSettings(context) {
-  let padding = getPadding();
-  let input = UI.getStringFromUser("Enter a padding value", padding);
+  let input = UI.getStringFromUser("Enter a padding value", options.padding);
   if (input != 'null') {
     let value = parseInt(input);
     if (isNaN(value) || input === '') {
@@ -56,14 +58,12 @@ export function onSettings(context) {
       UI.message('⚠️ Enter a number between 0 and 1000');
     } else {
       Settings.setSettingForKey('padding', value);
+      options.padding = value;
     }
   }
 }
 
 function randomizeAspectRatios(layers, x, y) {
-
-  const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
-  let padding = getPadding();
 
   let orderedLayers = layers.sort((a, b) => a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x());
   let firstLayer = orderedLayers[0];
@@ -88,7 +88,7 @@ function randomizeAspectRatios(layers, x, y) {
 
     layer.frame = frame;
 
-    x += frame.width + padding;
+    x += frame.width + options.padding;
 
   });
 
@@ -107,8 +107,7 @@ function fitLayers(layers, minX, maxX, y) {
   minX = minX || firstLayer.sketchObject.absoluteRect().x();
   maxX = maxX || lastLayer.sketchObject.absoluteRect().x() + lastLayer.frame.width;
 
-  let padding = getPadding();
-  let totalPadding = (layers.length - 1) * padding;
+  let totalPadding = (layers.length - 1) * options.padding;
   let scale = (maxX - minX) / (totalWidth + totalPadding);
 
   let x = minX;
@@ -128,7 +127,7 @@ function fitLayers(layers, minX, maxX, y) {
     frame.height = Math.round(height * scale);
     layer.frame = frame;
 
-    x += frame.width + padding;
+    x += frame.width + options.padding;
 
   });
 
@@ -151,7 +150,7 @@ function findGroups(layers) {
   let remainingLayers = new Set(layers);
 
   let range;
-  if (settings.isRowLayout) {
+  if (options.isRowLayout) {
     range = Math.round(median(layers.map(layer => layer.frame.height)));
   } else {
     range = Math.round(median(layers.map(layer => layer.frame.width)));
@@ -173,7 +172,7 @@ function findGroups(layers) {
     groups.push(largestGroup);
   }
 
-  if (settings.isRowLayout) {
+  if (options.isRowLayout) {
     return groups.sort((groupA, groupB) => groupA[0].sketchObject.absoluteRect().y() - groupB[0].sketchObject.absoluteRect().y());
   } else {
     return groups.sort((groupA, groupB) => groupA[0].sketchObject.absoluteRect().x() - groupB[0].sketchObject.absoluteRect().x());
@@ -186,7 +185,7 @@ function findLayersInGroup(layers, referenceLayer, range) {
   let found = [];
   let rowCentre = getLayerCentre(referenceLayer);
 
-  if (settings.isRowLayout) {
+  if (options.isRowLayout) {
 
     let lower = rowCentre.y - range / 2;
     let upper = rowCentre.y + range / 2;
@@ -254,12 +253,6 @@ function getLayerCentre(layer) {
     y: layer.sketchObject.absoluteRect().y() + layer.frame.height / 2
   };
 }
-
-// function compareFlowOrder(layerA, layerB) {
-//   let valueA = layerA.sketchObject.absoluteRect().x() + layerA.sketchObject.absoluteRect().y() * 1000;
-//   let valueB = layerB.sketchObject.absoluteRect().x() + layerB.sketchObject.absoluteRect().y() * 1000;
-//   return valueA - valueB;
-// }
 
 // function numberLayers(layers, prefix) {
 //   let i = 1;

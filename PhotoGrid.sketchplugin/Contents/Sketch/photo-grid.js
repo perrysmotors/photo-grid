@@ -92,8 +92,10 @@ var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
     DOM = __webpack_require__(/*! sketch/dom */ "sketch/dom"),
     Settings = __webpack_require__(/*! sketch/settings */ "sketch/settings");
 
-var settings = {
-  isRowLayout: true
+var aspectRatios = [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10];
+var options = {
+  isRowLayout: true,
+  padding: getPadding()
 };
 function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
@@ -128,8 +130,7 @@ function onFit(context) {
   }
 }
 function onSettings(context) {
-  var padding = getPadding();
-  var input = UI.getStringFromUser("Enter a padding value", padding);
+  var input = UI.getStringFromUser("Enter a padding value", options.padding);
 
   if (input != 'null') {
     var value = parseInt(input);
@@ -140,13 +141,12 @@ function onSettings(context) {
       UI.message('⚠️ Enter a number between 0 and 1000');
     } else {
       Settings.setSettingForKey('padding', value);
+      options.padding = value;
     }
   }
 }
 
 function randomizeAspectRatios(layers, x, y) {
-  var aspectRatios = [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10];
-  var padding = getPadding();
   var orderedLayers = layers.sort(function (a, b) {
     return a.sketchObject.absoluteRect().x() - b.sketchObject.absoluteRect().x();
   });
@@ -164,7 +164,7 @@ function randomizeAspectRatios(layers, x, y) {
     frame.y += delta.y;
     frame.width = Math.round(height * ratio);
     layer.frame = frame;
-    x += frame.width + padding;
+    x += frame.width + options.padding;
   });
 }
 
@@ -185,8 +185,7 @@ function fitLayers(layers, minX, maxX, y) {
   });
   minX = minX || firstLayer.sketchObject.absoluteRect().x();
   maxX = maxX || lastLayer.sketchObject.absoluteRect().x() + lastLayer.frame.width;
-  var padding = getPadding();
-  var totalPadding = (layers.length - 1) * padding;
+  var totalPadding = (layers.length - 1) * options.padding;
   var scale = (maxX - minX) / (totalWidth + totalPadding);
   var x = minX;
   y = y || firstLayer.sketchObject.absoluteRect().y();
@@ -199,7 +198,7 @@ function fitLayers(layers, minX, maxX, y) {
     frame.width = Math.round(frame.width * height / frame.height * scale);
     frame.height = Math.round(height * scale);
     layer.frame = frame;
-    x += frame.width + padding;
+    x += frame.width + options.padding;
   });
   var frame = lastLayer.frame;
   frame.width = maxX - lastLayer.sketchObject.absoluteRect().x();
@@ -221,7 +220,7 @@ function findGroups(layers) {
   var remainingLayers = new Set(layers);
   var range;
 
-  if (settings.isRowLayout) {
+  if (options.isRowLayout) {
     range = Math.round(median(layers.map(function (layer) {
       return layer.frame.height;
     })));
@@ -250,7 +249,7 @@ function findGroups(layers) {
     _loop();
   }
 
-  if (settings.isRowLayout) {
+  if (options.isRowLayout) {
     return groups.sort(function (groupA, groupB) {
       return groupA[0].sketchObject.absoluteRect().y() - groupB[0].sketchObject.absoluteRect().y();
     });
@@ -265,7 +264,7 @@ function findLayersInGroup(layers, referenceLayer, range) {
   var found = [];
   var rowCentre = getLayerCentre(referenceLayer);
 
-  if (settings.isRowLayout) {
+  if (options.isRowLayout) {
     var lower = rowCentre.y - range / 2;
     var upper = rowCentre.y + range / 2;
     layers.forEach(function (layer) {
@@ -350,12 +349,7 @@ function getLayerCentre(layer) {
     x: layer.sketchObject.absoluteRect().x() + layer.frame.width / 2,
     y: layer.sketchObject.absoluteRect().y() + layer.frame.height / 2
   };
-} // function compareFlowOrder(layerA, layerB) {
-//   let valueA = layerA.sketchObject.absoluteRect().x() + layerA.sketchObject.absoluteRect().y() * 1000;
-//   let valueB = layerB.sketchObject.absoluteRect().x() + layerB.sketchObject.absoluteRect().y() * 1000;
-//   return valueA - valueB;
-// }
-// function numberLayers(layers, prefix) {
+} // function numberLayers(layers, prefix) {
 //   let i = 1;
 //   layers.forEach(layer => {
 //     layer.name += `${prefix}-${i++}`
