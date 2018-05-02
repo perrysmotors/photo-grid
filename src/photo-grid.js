@@ -37,7 +37,6 @@ export function onFit(context) {
     rows.forEach(row => {
       fitLayers(row, bounds.x, bounds.x + bounds.width, y);
       y = row[0].frame.y + row[0].frame.height + getPadding();
-      // numberLayers(row, `Row ${i++}`);
     });
   }
 }
@@ -207,15 +206,15 @@ function getLayerCentre(layer) {
   return layer.frame.y + layer.frame.height / 2;
 }
 
-function compareFlowOrder(layerA, layerB) {
-  let valueA = layerA.frame.x + layerA.frame.y * 1000;
-  let valueB = layerB.frame.x + layerB.frame.y * 1000;
-  return valueA - valueB;
-}
+// function compareFlowOrder(layerA, layerB) {
+//   let valueA = layerA.frame.x + layerA.frame.y * 1000;
+//   let valueB = layerB.frame.x + layerB.frame.y * 1000;
+//   return valueA - valueB;
+// }
 
-function numberLayers(layers, prefix) {
-  let i = 1;
-  layers.forEach(layer => {
-    layer.name += `${prefix}-${i++}`
-  });
-}
+// function numberLayers(layers, prefix) {
+//   let i = 1;
+//   layers.forEach(layer => {
+//     layer.name += `${prefix}-${i++}`
+//   });
+// }
