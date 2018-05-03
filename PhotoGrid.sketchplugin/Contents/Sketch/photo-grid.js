@@ -92,11 +92,29 @@ var UI = __webpack_require__(/*! sketch/ui */ "sketch/ui"),
     DOM = __webpack_require__(/*! sketch/dom */ "sketch/dom"),
     Settings = __webpack_require__(/*! sketch/settings */ "sketch/settings");
 
-var options = {
-  isRowLayout: true,
-  padding: getPadding(),
-  aspectRatios: [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10]
-};
+var aspectRatios = [1, 10 / 8, 4 / 3, 7 / 5, 3 / 2, 16 / 9, 2 / 3, 5 / 7, 3 / 4, 8 / 10];
+var options = initOptions();
+var form = {};
+
+function initOptions() {
+  var defaults = {
+    isRowLayout: true,
+    padding: 16
+  };
+
+  for (var option in defaults) {
+    var value = eval(Settings.settingForKey(option));
+
+    if (value === undefined) {
+      Settings.setSettingForKey(option, defaults[option]);
+    } else {
+      defaults[option] = value;
+    }
+  }
+
+  return defaults;
+}
+
 function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
       selection = document.selectedLayers;
@@ -125,30 +143,39 @@ function onFit(context) {
       var y = bounds.y;
       groups.forEach(function (group) {
         fitLayersInRows(group, bounds, y);
-        y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
+        y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + options.padding;
       });
     } else {
       var x = bounds.x;
       groups.forEach(function (group) {
         fitLayersInColumns(group, bounds, x);
-        x = group[0].sketchObject.absoluteRect().x() + group[0].frame.width + getPadding();
+        x = group[0].sketchObject.absoluteRect().x() + group[0].frame.width + options.padding;
       });
     }
   }
 }
 function onSettings(context) {
-  var input = UI.getStringFromUser("Enter a padding value", options.padding);
+  var window = createWindow(context);
+  var alert = window[0];
+  var response = alert.runModal();
 
-  if (input != 'null') {
-    var value = parseInt(input);
+  if (response == "1000") {
+    // This code only runs when the user clicks 'OK';
+    // Get Layout
+    var layoutRadioInput = form.matrixFormat.cells().indexOfObject(form.matrixFormat.selectedCell());
+    options.isRowLayout = layoutRadioInput === 0;
+    Settings.setSettingForKey('isRowLayout', options.isRowLayout); // Get Spacing
 
-    if (isNaN(value) || input === '') {
-      UI.message('⚠️ The padding was not changed. Try entering a number.');
-    } else if (value < 0 || value > 1000) {
+    var spacingTextFieldInput = form.spacingTextField.stringValue();
+    var spacingValue = parseInt(spacingTextFieldInput);
+
+    if (isNaN(spacingValue) || spacingTextFieldInput === '') {
+      UI.message('⚠️ The spacing was not changed. Try entering a number.');
+    } else if (spacingValue < 0 || spacingValue > 1000) {
       UI.message('⚠️ Enter a number between 0 and 1000');
     } else {
-      Settings.setSettingForKey('padding', value);
-      options.padding = value;
+      options.padding = spacingValue;
+      Settings.setSettingForKey('padding', spacingValue);
     }
   }
 }
@@ -191,7 +218,7 @@ function randomizeAspectRatios(layers, bounds) {
 }
 
 function randomAspectRatio() {
-  return options.aspectRatios[Math.floor(Math.random() * options.aspectRatios.length)];
+  return aspectRatios[Math.floor(Math.random() * aspectRatios.length)];
 }
 
 function fitLayersInRows(layers, bounds, y) {
@@ -350,17 +377,6 @@ function findLayersInGroup(layers, referenceLayer, range) {
   return found;
 }
 
-function getPadding() {
-  var padding = Settings.settingForKey('padding');
-
-  if (padding === undefined) {
-    padding = 16;
-    Settings.setSettingForKey('padding', 16);
-  }
-
-  return padding;
-}
-
 function median(values) {
   values.sort(function (a, b) {
     return a - b;
@@ -414,6 +430,75 @@ function getLayerCentre(layer) {
 //     layer.name += `${prefix}-${i++}`
 //   });
 // }
+
+
+function createWindow(context) {
+  // Setup the window
+  var alert = COSAlertWindow.new();
+  alert.setMessageText("Photo Grid Settings");
+  alert.addButtonWithTitle("Ok");
+  alert.addButtonWithTitle("Cancel"); // Create the main view
+
+  var viewWidth = 400;
+  var viewHeight = 200;
+  var viewSpacer = 10;
+  var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, viewWidth, viewHeight));
+  alert.addAccessoryView(view); // --------------------------------------------------------------------------
+  // Create labels
+
+  var infoLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 50, viewWidth - 100, 50));
+  var spacingLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 90, viewWidth / 2 - 10, 20));
+  var layoutLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 155, viewWidth - 100, 20)); // Configure labels
+
+  infoLabel.setStringValue("Choose row or column layout and set the layer spacing. Photo Grid will try to keep layers in existing rows or columns.");
+  infoLabel.setSelectable(false);
+  infoLabel.setEditable(false);
+  infoLabel.setBezeled(false);
+  infoLabel.setDrawsBackground(false);
+  spacingLabel.setStringValue("Spacing:");
+  spacingLabel.setSelectable(false);
+  spacingLabel.setEditable(false);
+  spacingLabel.setBezeled(false);
+  spacingLabel.setDrawsBackground(false);
+  layoutLabel.setStringValue("Layout:");
+  layoutLabel.setSelectable(false);
+  layoutLabel.setEditable(false);
+  layoutLabel.setBezeled(false);
+  layoutLabel.setDrawsBackground(false); // Add labels
+
+  view.addSubview(infoLabel);
+  view.addSubview(spacingLabel);
+  view.addSubview(layoutLabel); // --------------------------------------------------------------------------
+  // Create textfields
+
+  form.spacingTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 115, 60, 20)); // Configure textfields
+
+  form.spacingTextField.setStringValue(options.padding); // Add textfields
+
+  view.addSubview(form.spacingTextField); // --------------------------------------------------------------------------
+  // Create radiobuttons prototype
+
+  var buttonFormat = NSButtonCell.alloc().init();
+  buttonFormat.setButtonType(NSRadioButton); // Create matrix for radio buttons
+
+  form.matrixFormat = NSMatrix.alloc().initWithFrame_mode_prototype_numberOfRows_numberOfColumns(NSMakeRect(0, viewHeight - 210, 400, 50), NSRadioModeMatrix, buttonFormat, 1, 2);
+  form.matrixFormat.setCellSize(CGSizeMake(90, 25));
+  var cells = form.matrixFormat.cells();
+  cells.objectAtIndex(0).setTitle("Rows →");
+  cells.objectAtIndex(1).setTitle("Columns ↓"); // Configure radiobuttons
+
+  if (options.isRowLayout) {
+    form.matrixFormat.selectCellAtRow_column(0, 0);
+  } else {
+    form.matrixFormat.selectCellAtRow_column(0, 1);
+  } // Add matrix
+
+
+  view.addSubview(form.matrixFormat); // --------------------------------------------------------------------------
+  // Show the dialog window
+
+  return [alert];
+}
 
 /***/ }),
 
