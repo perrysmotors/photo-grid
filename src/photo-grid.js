@@ -2,10 +2,11 @@ const UI = require('sketch/ui'),
       DOM = require('sketch/dom'),
       Settings = require('sketch/settings');
 
+const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
+
 var options = {
   isRowLayout: true,
-  padding: getPadding(),
-  aspectRatios: [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10]
+  padding: getPadding()
 };
 
 export function onRandomizeAspectRatios(context) {
@@ -109,7 +110,7 @@ function randomizeAspectRatios(layers, bounds) {
 }
 
 function randomAspectRatio() {
-  return options.aspectRatios[Math.floor(Math.random() * options.aspectRatios.length)]
+  return aspectRatios[Math.floor(Math.random() * aspectRatios.length)]
 }
 
 function fitLayersInRows(layers, bounds, y) {
