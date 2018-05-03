@@ -4,10 +4,23 @@ const UI = require('sketch/ui'),
 
 const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
 
-var options = {
-  isRowLayout: true,
-  padding: getPadding()
-};
+var options = initOptions();
+
+function initOptions() {
+  const defaults = {
+    isRowLayout: true,
+    padding: 16
+  };
+  for (let option in defaults) {
+    let value = eval(Settings.settingForKey(option));
+    if (value === undefined) {
+      Settings.setSettingForKey(option, defaults[option]);
+    } else {
+      defaults[option] = value;
+    }
+  }
+  return defaults
+}
 
 export function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
@@ -40,7 +53,7 @@ export function onFit(context) {
       let y = bounds.y;
       groups.forEach(group => {
         fitLayersInRows(group, bounds, y);
-        y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + getPadding();
+        y = group[0].sketchObject.absoluteRect().y() + group[0].frame.height + options.padding;
       });
 
     } else {
@@ -48,7 +61,7 @@ export function onFit(context) {
       let x = bounds.x;
       groups.forEach(group => {
         fitLayersInColumns(group, bounds, x);
-        x = group[0].sketchObject.absoluteRect().x() + group[0].frame.width + getPadding();
+        x = group[0].sketchObject.absoluteRect().x() + group[0].frame.width + options.padding;
       });
 
     }
@@ -267,15 +280,6 @@ function findLayersInGroup(layers, referenceLayer, range) {
   }
 
   return found;
-}
-
-function getPadding() {
-  let padding = Settings.settingForKey('padding');
-  if (padding === undefined) {
-    padding = 16;
-    Settings.setSettingForKey('padding', 16);
-  }
-  return padding;
 }
 
 function median(values) {
