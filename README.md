@@ -3,9 +3,16 @@
 
 A Sketch plugin that can size layers to common photo dimensions and scale them to fit in a row.
 
+![photo grid video](https://user-images.githubusercontent.com/12557727/39623844-e1a84eb4-4f8e-11e8-850f-2bfb0476f35d.gif)
+
 ## Features
 - Apply random aspect ratios to selected layers corresponding to common photo sizes.
-- Scale and space layers to fit between the furthest left and right layers in the selection, with fixed padding.
+- Scale and space layers to fit between the furthest left and right layers in the selection.
+- Choose row or column layout and set the spacing between layers.
+
+## Supports row or column layouts
+
+![layout](https://user-images.githubusercontent.com/12557727/39624616-dd46651a-4f91-11e8-8a00-d89f29f55fcd.png)
 
 ## Install
 Download or clone the repository, and double click `PhotoGrid.sketchplugin`.
