@@ -10,7 +10,9 @@ var form = {};
 function initOptions() {
   const defaults = {
     isRowLayout: true,
-    padding: 16
+    padding: 16,
+    hasWidthLimit: false,
+    maxWidth: 1200
   };
   for (let option in defaults) {
     let value = eval(Settings.settingForKey(option));
@@ -50,6 +52,9 @@ export function onFit(context) {
     let groups = findGroups(selection.layers);
 
     if (options.isRowLayout) {
+      if (options.hasWidthLimit) {
+        bounds.width = options.maxWidth;
+      }
 
       let y = bounds.y;
       groups.forEach(group => {
@@ -71,18 +76,12 @@ export function onFit(context) {
 
 export function onSettings(context) {
 
-  var window = createWindow(context);
-  var alert = window[0];
+  var alert = createDialog();
 
   var response = alert.runModal();
 
   if (response == "1000") {
     // This code only runs when the user clicks 'OK';
-
-    // Get Layout
-    let layoutRadioInput = form.matrixFormat.cells().indexOfObject(form.matrixFormat.selectedCell());
-    options.isRowLayout = (layoutRadioInput === 0)
-    Settings.setSettingForKey('isRowLayout', options.isRowLayout);
 
     // Get Spacing
     let spacingTextFieldInput = form.spacingTextField.stringValue();
@@ -91,10 +90,32 @@ export function onSettings(context) {
     if (isNaN(spacingValue) || spacingTextFieldInput === '') {
       UI.message('⚠️ The spacing was not changed. Try entering a number.');
     } else if (spacingValue < 0 || spacingValue > 1000) {
-      UI.message('⚠️ Enter a number between 0 and 1000');
+      UI.message('⚠️ Enter a spacing value between 0 and 1000');
     } else {
       options.padding = spacingValue;
       Settings.setSettingForKey('padding', spacingValue);
+    }
+
+    // Get Layout
+    let layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
+    options.isRowLayout = (layoutRadioInput === 0)
+    Settings.setSettingForKey('isRowLayout', options.isRowLayout);
+
+    // Get max width setting
+    options.hasWidthLimit = (form.hasWidthLimitCheckbox.state() == NSOnState);
+    Settings.setSettingForKey('hasWidthLimit', options.hasWidthLimit);
+
+    // Get width value
+    let maxWidthTextFieldInput = form.maxWidthTextField.stringValue();
+    let maxWidthValue = parseInt(maxWidthTextFieldInput);
+
+    if (isNaN(maxWidthValue) || maxWidthTextFieldInput === '') {
+      UI.message('⚠️ The maximum width was not changed. Try entering a number.');
+    } else if (maxWidthValue < 10 || maxWidthValue > 10000) {
+      UI.message('⚠️ Enter a maximum width between 10 and 10,000');
+    } else {
+      options.maxWidth = maxWidthValue;
+      Settings.setSettingForKey('maxWidth', maxWidthValue);
     }
 
   }
@@ -338,62 +359,36 @@ function getLayerCentre(layer) {
 //   });
 // }
 
-function createWindow(context) {
+function createDialog() {
+
+  var viewWidth = 360;
+  var viewHeight = 250;
 
   // Setup the window
-  var alert = COSAlertWindow.new();
-  alert.setMessageText("Photo Grid Settings")
-  alert.addButtonWithTitle("Ok");
-  alert.addButtonWithTitle("Cancel");
+  var dialog = NSAlert.alloc().init();
+  dialog.setMessageText('Photo Grid Settings')
+  dialog.addButtonWithTitle('Ok');
+  dialog.addButtonWithTitle('Cancel');
 
   // Create the main view
-  var viewWidth = 400;
-  var viewHeight = 200;
-  var viewSpacer = 10;
   var view = NSView.alloc().initWithFrame(NSMakeRect(0, 0, viewWidth, viewHeight));
-  alert.addAccessoryView(view);
+  dialog.setAccessoryView(view);
 
   // --------------------------------------------------------------------------
 
   // Create labels
-  var infoLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 50, (viewWidth - 100), 50));
-  var spacingLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 90, (viewWidth / 2) - 10, 20));
-  var layoutLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 155, (viewWidth - 100), 20));
-
-  // Configure labels
-  infoLabel.setStringValue("Choose row or column layout and set the layer spacing. Photo Grid will try to keep layers in existing rows or columns.");
-  infoLabel.setSelectable(false);
-  infoLabel.setEditable(false);
-  infoLabel.setBezeled(false);
-  infoLabel.setDrawsBackground(false);
-
-  spacingLabel.setStringValue("Spacing:");
-  spacingLabel.setSelectable(false);
-  spacingLabel.setEditable(false);
-  spacingLabel.setBezeled(false);
-  spacingLabel.setDrawsBackground(false);
-
-  layoutLabel.setStringValue("Layout:");
-  layoutLabel.setSelectable(false);
-  layoutLabel.setEditable(false);
-  layoutLabel.setBezeled(false);
-  layoutLabel.setDrawsBackground(false);
-
-  // Add labels
-  view.addSubview(infoLabel);
-  view.addSubview(spacingLabel);
-  view.addSubview(layoutLabel);
-
-  // --------------------------------------------------------------------------
+  var infoLabel = createTextField('Choose row or column layout and set the layer spacing. Photo Grid will try to keep layers in existing rows or columns.' , NSMakeRect(0, viewHeight - 40, viewWidth - 10, 40));
+  var spacingLabel = createTextField('Spacing:', NSMakeRect(0, viewHeight - 70, 200, 20));
+  var layoutLabel = createTextField('Layout:', NSMakeRect(0, viewHeight - 135, 200, 20));
+  var maxWidthLabel = createTextField('Scale and Fit Rows to Fixed Width:', NSMakeRect(0, viewHeight - 200, viewWidth -10, 20));
 
   // Create textfields
-  form.spacingTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 115, 60, 20));
+  form.spacingTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 95, 70, 20));
+  form.maxWidthTextField = NSTextField.alloc().initWithFrame(NSMakeRect(90, viewHeight - 225, 70, 20));
 
-  // Configure textfields
-  form.spacingTextField.setStringValue(options.padding);
+  // Create checkbox
+  form.hasWidthLimitCheckbox = createCheckbox('On', NSMakeRect(0, viewHeight - 225, 90, 20), options.hasWidthLimit);
 
-  // Add textfields
-  view.addSubview(form.spacingTextField);
 
   // --------------------------------------------------------------------------
 
@@ -402,32 +397,95 @@ function createWindow(context) {
   buttonFormat.setButtonType(NSRadioButton);
 
   // Create matrix for radio buttons
-  form.matrixFormat = NSMatrix.alloc().initWithFrame_mode_prototype_numberOfRows_numberOfColumns(
-            NSMakeRect(0, viewHeight - 210, 400, 50),
-            NSRadioModeMatrix,
-            buttonFormat,
-            1,
-            2
-        );
+  form.layoutMatrix = NSMatrix.alloc().initWithFrame_mode_prototype_numberOfRows_numberOfColumns(
+    NSMakeRect(0, viewHeight - 160, viewWidth, 20),
+    NSRadioModeMatrix,
+    buttonFormat,
+    1,
+    2
+  );
 
-  form.matrixFormat.setCellSize(CGSizeMake(90, 25));
+  form.layoutMatrix.setCellSize(CGSizeMake(90, 20));
 
-  var cells = form.matrixFormat.cells();
-  cells.objectAtIndex(0).setTitle("Rows →");
-  cells.objectAtIndex(1).setTitle("Columns ↓");
+  var cells = form.layoutMatrix.cells();
+  cells.objectAtIndex(0).setTitle('Rows →');
+  cells.objectAtIndex(1).setTitle('Columns ↓');
 
-  // Configure radiobuttons
+  // --------------------------------------------------------------------------
+
+  // Configure inputs
+  form.spacingTextField.setStringValue(String(options.padding));
+  form.maxWidthTextField.setStringValue(String(options.maxWidth));
+
+  form.maxWidthTextField.setEnabled(options.hasWidthLimit);
+
   if (options.isRowLayout) {
-    form.matrixFormat.selectCellAtRow_column(0, 0);
+    form.layoutMatrix.selectCellAtRow_column(0, 0);
   } else {
-    form.matrixFormat.selectCellAtRow_column(0, 1);
+    form.layoutMatrix.selectCellAtRow_column(0, 1);
+    form.hasWidthLimitCheckbox.setEnabled(false);
+    form.maxWidthTextField.setEnabled(false);
   }
 
-  // Add matrix
-  view.addSubview(form.matrixFormat);
+  // --------------------------------------------------------------------------
+
+  // Enable / Disable
+  form.hasWidthLimitCheckbox.setCOSJSTargetFunction((sender) => {
+    form.maxWidthTextField.setEnabled(sender.state() == NSOnState);
+  });
+
+  form.layoutMatrix.setCOSJSTargetFunction((sender) => {
+    let layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
+    let isRowLayout = (layoutRadioInput === 0);
+    let hasWidthLimit = (form.hasWidthLimitCheckbox.state() == NSOnState);
+    if (isRowLayout) {
+      form.hasWidthLimitCheckbox.setEnabled(true);
+      form.maxWidthTextField.setEnabled(hasWidthLimit);
+    } else {
+      form.hasWidthLimitCheckbox.setEnabled(false);
+      form.maxWidthTextField.setEnabled(false);
+    }
+  });
+
+  // --------------------------------------------------------------------------
+
+  // Add inputs to view
+  view.addSubview(infoLabel);
+  view.addSubview(spacingLabel);
+  view.addSubview(layoutLabel);
+  view.addSubview(maxWidthLabel);
+  view.addSubview(form.spacingTextField);
+  view.addSubview(form.maxWidthTextField);
+  view.addSubview(form.layoutMatrix);
+  view.addSubview(form.hasWidthLimitCheckbox);
 
   // --------------------------------------------------------------------------
 
   // Show the dialog window
-  return [alert];
+  return dialog;
+}
+
+function createTextField(stringValue, frame) {
+  let textField = NSTextField.alloc().initWithFrame(frame);
+  textField.setStringValue(stringValue);
+  textField.setSelectable(false);
+  textField.setEditable(false);
+  textField.setBezeled(false);
+  textField.setDrawsBackground(false);
+  return textField;
+}
+
+function createCheckbox(title, frame, isChecked) {
+
+  let checkbox = NSButton.alloc().initWithFrame(frame);
+  checkbox.setButtonType(NSSwitchButton);
+  checkbox.setBezelStyle(0);
+  checkbox.setTitle(title);
+  if (isChecked) {
+    checkbox.setState(NSOnState);
+  } else {
+    checkbox.setState(NSOffState);
+  }
+
+  return checkbox;
 }
