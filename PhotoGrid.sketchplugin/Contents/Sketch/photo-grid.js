@@ -162,21 +162,37 @@ function onSettings(context) {
 
   if (response == "1000") {
     // This code only runs when the user clicks 'OK';
-    // Get Layout
-    var layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
-    options.isRowLayout = layoutRadioInput === 0;
-    Settings.setSettingForKey('isRowLayout', options.isRowLayout); // Get Spacing
-
+    // Get Spacing
     var spacingTextFieldInput = form.spacingTextField.stringValue();
     var spacingValue = parseInt(spacingTextFieldInput);
 
     if (isNaN(spacingValue) || spacingTextFieldInput === '') {
       UI.message('⚠️ The spacing was not changed. Try entering a number.');
     } else if (spacingValue < 0 || spacingValue > 1000) {
-      UI.message('⚠️ Enter a number between 0 and 1000');
+      UI.message('⚠️ Enter a spacing value between 0 and 1000');
     } else {
       options.padding = spacingValue;
       Settings.setSettingForKey('padding', spacingValue);
+    } // Get Layout
+
+
+    var layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
+    options.isRowLayout = layoutRadioInput === 0;
+    Settings.setSettingForKey('isRowLayout', options.isRowLayout); // Get max width setting
+
+    options.hasWidthLimit = form.hasWidthLimitCheckbox.state() == NSOnState;
+    Settings.setSettingForKey('hasWidthLimit', options.hasWidthLimit); // Get width value
+
+    var maxWidthTextFieldInput = form.maxWidthTextField.stringValue();
+    var maxWidthValue = parseInt(maxWidthTextFieldInput);
+
+    if (isNaN(maxWidthValue) || maxWidthTextFieldInput === '') {
+      UI.message('⚠️ The maximum width was not changed. Try entering a number.');
+    } else if (maxWidthValue < 0 || maxWidthValue > 10000) {
+      UI.message('⚠️ Enter a maximum width between 0 and 10,000');
+    } else {
+      options.maxWidth = maxWidthValue;
+      Settings.setSettingForKey('maxWidth', maxWidthValue);
     }
   }
 }
@@ -454,7 +470,7 @@ function createDialog() {
   form.spacingTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 95, 70, 20));
   form.maxWidthTextField = NSTextField.alloc().initWithFrame(NSMakeRect(90, viewHeight - 225, 70, 20)); // Create checkbox
 
-  form.setMaxWidthCheckbox = createCheckbox('On', NSMakeRect(0, viewHeight - 225, 90, 20), options.hasWidthLimit); // --------------------------------------------------------------------------
+  form.hasWidthLimitCheckbox = createCheckbox('On', NSMakeRect(0, viewHeight - 225, 90, 20), options.hasWidthLimit); // --------------------------------------------------------------------------
   // Create radiobuttons prototype
 
   var buttonFormat = NSButtonCell.alloc().init();
@@ -483,7 +499,7 @@ function createDialog() {
   } // Select / Deselect
 
 
-  form.setMaxWidthCheckbox.setCOSJSTargetFunction(function (sender) {
+  form.hasWidthLimitCheckbox.setCOSJSTargetFunction(function (sender) {
     if (sender.state() == NSOnState) {
       form.maxWidthTextField.setEnabled(true);
     } else {
@@ -498,7 +514,7 @@ function createDialog() {
   view.addSubview(form.spacingTextField);
   view.addSubview(form.maxWidthTextField);
   view.addSubview(form.layoutMatrix);
-  view.addSubview(form.setMaxWidthCheckbox); // --------------------------------------------------------------------------
+  view.addSubview(form.hasWidthLimitCheckbox); // --------------------------------------------------------------------------
   // Show the dialog window
 
   return dialog;
