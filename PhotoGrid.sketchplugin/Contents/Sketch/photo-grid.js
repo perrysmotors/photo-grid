@@ -142,6 +142,10 @@ function onFit(context) {
     var groups = findGroups(selection.layers);
 
     if (options.isRowLayout) {
+      if (options.hasWidthLimit) {
+        bounds.width = options.maxWidth;
+      }
+
       var y = bounds.y;
       groups.forEach(function (group) {
         fitLayersInRows(group, bounds, y);

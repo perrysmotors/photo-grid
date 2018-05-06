@@ -52,6 +52,9 @@ export function onFit(context) {
     let groups = findGroups(selection.layers);
 
     if (options.isRowLayout) {
+      if (options.hasWidthLimit) {
+        bounds.width = options.maxWidth;
+      }
 
       let y = bounds.y;
       groups.forEach(group => {

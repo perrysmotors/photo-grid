@@ -9,6 +9,7 @@ A Sketch plugin that can size layers to common photo dimensions and scale them t
 - Apply random aspect ratios to selected layers corresponding to common photo sizes.
 - Scale and space layers to fit between the furthest left and right layers in the selection.
 - Choose row or column layout and set the spacing between layers.
+- Specify fixed width when scaling rows.
 
 ## Supports row or column layouts
 
