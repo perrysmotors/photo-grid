@@ -188,8 +188,8 @@ function onSettings(context) {
 
     if (isNaN(maxWidthValue) || maxWidthTextFieldInput === '') {
       UI.message('⚠️ The maximum width was not changed. Try entering a number.');
-    } else if (maxWidthValue < 0 || maxWidthValue > 10000) {
-      UI.message('⚠️ Enter a maximum width between 0 and 10,000');
+    } else if (maxWidthValue < 10 || maxWidthValue > 10000) {
+      UI.message('⚠️ Enter a maximum width between 10 and 10,000');
     } else {
       options.maxWidth = maxWidthValue;
       Settings.setSettingForKey('maxWidth', maxWidthValue);
@@ -465,7 +465,7 @@ function createDialog() {
   var infoLabel = createTextField('Choose row or column layout and set the layer spacing. Photo Grid will try to keep layers in existing rows or columns.', NSMakeRect(0, viewHeight - 40, viewWidth - 10, 40));
   var spacingLabel = createTextField('Spacing:', NSMakeRect(0, viewHeight - 70, 200, 20));
   var layoutLabel = createTextField('Layout:', NSMakeRect(0, viewHeight - 135, 200, 20));
-  var maxWidthLabel = createTextField('Maximum Width:', NSMakeRect(0, viewHeight - 200, 200, 20)); // Create textfields
+  var maxWidthLabel = createTextField('Scale and Fit Rows to Fixed Width:', NSMakeRect(0, viewHeight - 200, viewWidth - 10, 20)); // Create textfields
 
   form.spacingTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 95, 70, 20));
   form.maxWidthTextField = NSTextField.alloc().initWithFrame(NSMakeRect(90, viewHeight - 225, 70, 20)); // Create checkbox
@@ -485,27 +485,35 @@ function createDialog() {
 
   form.spacingTextField.setStringValue(String(options.padding));
   form.maxWidthTextField.setStringValue(String(options.maxWidth));
+  form.maxWidthTextField.setEnabled(options.hasWidthLimit);
 
   if (options.isRowLayout) {
     form.layoutMatrix.selectCellAtRow_column(0, 0);
   } else {
     form.layoutMatrix.selectCellAtRow_column(0, 1);
-  }
-
-  if (options.hasWidthLimit) {
-    form.maxWidthTextField.setEnabled(true);
-  } else {
+    form.hasWidthLimitCheckbox.setEnabled(false);
     form.maxWidthTextField.setEnabled(false);
-  } // Select / Deselect
+  } // --------------------------------------------------------------------------
+  // Enable / Disable
 
 
   form.hasWidthLimitCheckbox.setCOSJSTargetFunction(function (sender) {
-    if (sender.state() == NSOnState) {
-      form.maxWidthTextField.setEnabled(true);
+    form.maxWidthTextField.setEnabled(sender.state() == NSOnState);
+  });
+  form.layoutMatrix.setCOSJSTargetFunction(function (sender) {
+    var layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
+    var isRowLayout = layoutRadioInput === 0;
+    var hasWidthLimit = form.hasWidthLimitCheckbox.state() == NSOnState;
+
+    if (isRowLayout) {
+      form.hasWidthLimitCheckbox.setEnabled(true);
+      form.maxWidthTextField.setEnabled(hasWidthLimit);
     } else {
+      form.hasWidthLimitCheckbox.setEnabled(false);
       form.maxWidthTextField.setEnabled(false);
     }
-  }); // Add inputs to view
+  }); // --------------------------------------------------------------------------
+  // Add inputs to view
 
   view.addSubview(infoLabel);
   view.addSubview(spacingLabel);
