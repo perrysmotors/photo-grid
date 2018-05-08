@@ -180,11 +180,10 @@ function onSettings(context) {
     } // Get Layout
 
 
-    var layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
-    options.isRowLayout = layoutRadioInput === 0;
+    options.isRowLayout = form.rowsRadioButton.state() === NSOnState;
     Settings.setSettingForKey('isRowLayout', options.isRowLayout); // Get max width setting
 
-    options.hasWidthLimit = form.hasWidthLimitCheckbox.state() == NSOnState;
+    options.hasWidthLimit = form.hasWidthLimitCheckbox.state() === NSOnState;
     Settings.setSettingForKey('hasWidthLimit', options.hasWidthLimit); // Get width value
 
     var maxWidthTextFieldInput = form.maxWidthTextField.stringValue();
@@ -472,42 +471,40 @@ function createDialog() {
   var maxWidthLabel = createTextField('Scale and Fit Rows to Fixed Width:', NSMakeRect(0, viewHeight - 200, viewWidth - 10, 20)); // Create textfields
 
   form.spacingTextField = NSTextField.alloc().initWithFrame(NSMakeRect(0, viewHeight - 95, 70, 20));
-  form.maxWidthTextField = NSTextField.alloc().initWithFrame(NSMakeRect(90, viewHeight - 225, 70, 20)); // Create checkbox
+  form.maxWidthTextField = NSTextField.alloc().initWithFrame(NSMakeRect(90, viewHeight - 225, 70, 20)); // Create radiobuttons
 
-  form.hasWidthLimitCheckbox = createCheckbox('On', NSMakeRect(0, viewHeight - 225, 90, 20), options.hasWidthLimit); // --------------------------------------------------------------------------
-  // Create radiobuttons prototype
+  form.rowsRadioButton = createRadioButton('Rows →', NSMakeRect(0, viewHeight - 160, 90, 20));
+  form.columnsRadioButton = createRadioButton('Columns ↓', NSMakeRect(80, viewHeight - 160, 90, 20)); // Create checkbox
 
-  var buttonFormat = NSButtonCell.alloc().init();
-  buttonFormat.setButtonType(NSRadioButton); // Create matrix for radio buttons
-
-  form.layoutMatrix = NSMatrix.alloc().initWithFrame_mode_prototype_numberOfRows_numberOfColumns(NSMakeRect(0, viewHeight - 160, viewWidth, 20), NSRadioModeMatrix, buttonFormat, 1, 2);
-  form.layoutMatrix.setCellSize(CGSizeMake(90, 20));
-  var cells = form.layoutMatrix.cells();
-  cells.objectAtIndex(0).setTitle('Rows →');
-  cells.objectAtIndex(1).setTitle('Columns ↓'); // --------------------------------------------------------------------------
-  // Configure inputs
+  form.hasWidthLimitCheckbox = createCheckbox('On', NSMakeRect(0, viewHeight - 225, 90, 20)); // --------------------------------------------------------------------------
+  // Set initial input values and enabled states
 
   form.spacingTextField.setStringValue(String(options.padding));
   form.maxWidthTextField.setStringValue(String(options.maxWidth));
-  form.maxWidthTextField.setEnabled(options.hasWidthLimit);
+
+  if (options.hasWidthLimit) {
+    form.hasWidthLimitCheckbox.setState(NSOnState);
+  } else {
+    form.maxWidthTextField.setEnabled(false);
+  }
 
   if (options.isRowLayout) {
-    form.layoutMatrix.selectCellAtRow_column(0, 0);
+    form.rowsRadioButton.setState(NSOnState);
   } else {
-    form.layoutMatrix.selectCellAtRow_column(0, 1);
+    form.columnsRadioButton.setState(NSOnState);
     form.hasWidthLimitCheckbox.setEnabled(false);
     form.maxWidthTextField.setEnabled(false);
   } // --------------------------------------------------------------------------
-  // Enable / Disable
+  // Handle Enable / Disable Events
 
 
   form.hasWidthLimitCheckbox.setCOSJSTargetFunction(function (sender) {
-    form.maxWidthTextField.setEnabled(sender.state() == NSOnState);
+    form.maxWidthTextField.setEnabled(sender.state() === NSOnState);
   });
-  form.layoutMatrix.setCOSJSTargetFunction(function (sender) {
-    var layoutRadioInput = form.layoutMatrix.cells().indexOfObject(form.layoutMatrix.selectedCell());
-    var isRowLayout = layoutRadioInput === 0;
-    var hasWidthLimit = form.hasWidthLimitCheckbox.state() == NSOnState;
+
+  var radioTargetFunction = function radioTargetFunction(sender) {
+    var isRowLayout = sender === form.rowsRadioButton;
+    var hasWidthLimit = form.hasWidthLimitCheckbox.state() === NSOnState;
 
     if (isRowLayout) {
       form.hasWidthLimitCheckbox.setEnabled(true);
@@ -516,6 +513,13 @@ function createDialog() {
       form.hasWidthLimitCheckbox.setEnabled(false);
       form.maxWidthTextField.setEnabled(false);
     }
+  };
+
+  form.rowsRadioButton.setCOSJSTargetFunction(function (sender) {
+    return radioTargetFunction(sender);
+  });
+  form.columnsRadioButton.setCOSJSTargetFunction(function (sender) {
+    return radioTargetFunction(sender);
   }); // --------------------------------------------------------------------------
   // Add inputs to view
 
@@ -525,7 +529,8 @@ function createDialog() {
   view.addSubview(maxWidthLabel);
   view.addSubview(form.spacingTextField);
   view.addSubview(form.maxWidthTextField);
-  view.addSubview(form.layoutMatrix);
+  view.addSubview(form.rowsRadioButton);
+  view.addSubview(form.columnsRadioButton);
   view.addSubview(form.hasWidthLimitCheckbox); // --------------------------------------------------------------------------
   // Show the dialog window
 
@@ -542,19 +547,19 @@ function createTextField(stringValue, frame) {
   return textField;
 }
 
-function createCheckbox(title, frame, isChecked) {
+function createCheckbox(title, frame) {
   var checkbox = NSButton.alloc().initWithFrame(frame);
   checkbox.setButtonType(NSSwitchButton);
   checkbox.setBezelStyle(0);
   checkbox.setTitle(title);
-
-  if (isChecked) {
-    checkbox.setState(NSOnState);
-  } else {
-    checkbox.setState(NSOffState);
-  }
-
   return checkbox;
+}
+
+function createRadioButton(title, frame) {
+  var radioButton = NSButton.alloc().initWithFrame(frame);
+  radioButton.setButtonType(NSRadioButton);
+  radioButton.setTitle(title);
+  return radioButton;
 }
 
 /***/ }),
