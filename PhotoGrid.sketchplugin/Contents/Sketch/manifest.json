@@ -34,8 +34,9 @@
   "version": "3.1.1",
   "description": "Size layers to common photo dimensions and scale them to fit in rows or columns",
   "name": "Photo Grid",
+  "identifier": "Photo Grid",
   "disableCocoaScriptPreprocessor": true,
-  "appcast": "https://api.sketchpacks.com/v1/plugins/com.gilesperry.photo-grid/appcast",
+  "appcast": "https://raw.githubusercontent.com/perrysmotors/photo-grid/master/.appcast.xml",
   "author": "Giles Perry",
   "authorEmail": "giles@gilesperry.info"
 }
