@@ -9,7 +9,7 @@
   "skpm": {
     "name": "Photo Grid",
     "manifest": "src/manifest.json",
-    "identifier" : "com.gilesperry.photo-grid",
+    "identifier": "com.gilesperry.photo-grid",
     "main": "PhotoGrid.sketchplugin",
     "assets": [
       "assets/**/*"
@@ -27,6 +27,6 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@skpm/builder": "^0.5.2"
+    "@skpm/builder": "^0.5.15"
   }
 }
