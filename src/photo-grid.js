@@ -6,7 +6,7 @@ import { createDialog, form } from "./interface"
 import { options } from "./options"
 
 export function onRandomizeAspectRatios(context) {
-    var document = DOM.getSelectedDocument(),
+    const document = DOM.getSelectedDocument(),
         selection = document.selectedLayers
 
     if (selection.length === 0) {
@@ -22,7 +22,7 @@ export function onRandomizeAspectRatios(context) {
 }
 
 export function onFit(context) {
-    var document = DOM.getSelectedDocument(),
+    const document = DOM.getSelectedDocument(),
         selection = document.selectedLayers
 
     if (selection.length === 0) {
@@ -58,9 +58,9 @@ export function onFit(context) {
 }
 
 export function onSettings(context) {
-    var alert = createDialog()
+    const alert = createDialog()
 
-    var response = alert.runModal()
+    const response = alert.runModal()
 
     if (response == "1000") {
         // This code only runs when the user clicks 'OK';
