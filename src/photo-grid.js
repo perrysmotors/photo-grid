@@ -1,6 +1,6 @@
-const UI = require('sketch/ui'),
-      DOM = require('sketch/dom'),
-      Settings = require('sketch/settings');
+import UI from "sketch/ui"
+import DOM from "sketch/dom"
+import Settings from "sketch/settings"
 
 const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
 
