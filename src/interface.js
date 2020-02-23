@@ -3,17 +3,17 @@ import { options } from "./options";
 export const form = {};
 
 export function createDialog() {
-  var viewWidth = 360;
-  var viewHeight = 250;
+  const viewWidth = 360;
+  const viewHeight = 250;
 
   // Setup the window
-  var dialog = NSAlert.alloc().init();
+  const dialog = NSAlert.alloc().init();
   dialog.setMessageText("Photo Grid Settings");
   dialog.addButtonWithTitle("Ok");
   dialog.addButtonWithTitle("Cancel");
 
   // Create the main view
-  var view = NSView.alloc().initWithFrame(
+  const view = NSView.alloc().initWithFrame(
     NSMakeRect(0, 0, viewWidth, viewHeight)
   );
   dialog.setAccessoryView(view);
@@ -21,19 +21,19 @@ export function createDialog() {
   // --------------------------------------------------------------------------
 
   // Create labels
-  var infoLabel = createTextField(
+  const infoLabel = createTextField(
     "Choose row or column layout and set the layer spacing. Photo Grid will try to keep layers in existing rows or columns.",
     NSMakeRect(0, viewHeight - 40, viewWidth - 10, 40)
   );
-  var spacingLabel = createTextField(
+  const spacingLabel = createTextField(
     "Spacing:",
     NSMakeRect(0, viewHeight - 70, 200, 20)
   );
-  var layoutLabel = createTextField(
+  const layoutLabel = createTextField(
     "Layout:",
     NSMakeRect(0, viewHeight - 135, 200, 20)
   );
-  var maxWidthLabel = createTextField(
+  const maxWidthLabel = createTextField(
     "Scale and Fit Rows to Fixed Width:",
     NSMakeRect(0, viewHeight - 200, viewWidth - 10, 20)
   );
