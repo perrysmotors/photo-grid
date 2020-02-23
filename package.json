@@ -27,6 +27,6 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@skpm/builder": "^0.5.15"
+    "@skpm/builder": "^0.7.5"
   }
 }
