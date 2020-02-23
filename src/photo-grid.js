@@ -5,8 +5,6 @@ import Settings from "sketch/settings"
 import {createDialog, form} from "./interface"
 import {options} from "./options"
 
-const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
-
 export function onRandomizeAspectRatios(context) {
   var document = DOM.getSelectedDocument(),
       selection = document.selectedLayers;
@@ -143,6 +141,7 @@ function randomizeAspectRatios(layers, bounds) {
 }
 
 function randomAspectRatio() {
+  const aspectRatios = [1, 10/8, 4/3, 7/5, 3/2, 16/9, 2/3, 5/7, 3/4, 8/10];
   return aspectRatios[Math.floor(Math.random() * aspectRatios.length)]
 }
 
