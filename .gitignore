@@ -1,5 +1,5 @@
 # build artifacts
-plugin.sketchplugin
+PhotoGrid.sketchplugin
 
 # npm
 node_modules
