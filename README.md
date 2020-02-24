@@ -15,8 +15,11 @@ A Sketch plugin that can size layers to common photo dimensions and scale them t
 
 ![layout](https://user-images.githubusercontent.com/12557727/39624616-dd46651a-4f91-11e8-8a00-d89f29f55fcd.png)
 
-## Install
-Download or clone the repository, and double click `PhotoGrid.sketchplugin`.
+## Installation
+
+* [Download](../../releases/latest/download/PhotoGrid.sketchplugin.zip) the latest release of the plugin
+* Un-zip
+* Double-click on `PhotoGrid.sketchplugin`
 
 or...
 
