@@ -1,8 +1,57 @@
+import UI from "sketch/ui"
+import Settings from "sketch/settings"
+
 import { options } from "./options"
 
-export const form = {}
+const form = {}
 
-export function createDialog() {
+export function onSettings(context) {
+    const alert = createDialog()
+    console.log("Hi")
+    const response = alert.runModal()
+
+    if (response == "1000") {
+        // This code only runs when the user clicks 'OK';
+
+        // Get Spacing
+        let spacingTextFieldInput = form.spacingTextField.stringValue()
+        let spacingValue = parseInt(spacingTextFieldInput)
+
+        if (isNaN(spacingValue) || spacingTextFieldInput === "") {
+            UI.message("⚠️ The spacing was not changed. Try entering a number.")
+        } else if (spacingValue < 0 || spacingValue > 1000) {
+            UI.message("⚠️ Enter a spacing value between 0 and 1000")
+        } else {
+            options.padding = spacingValue
+            Settings.setSettingForKey("padding", spacingValue)
+        }
+
+        // Get Layout
+        options.isRowLayout = form.rowsRadioButton.state() === NSOnState
+        Settings.setSettingForKey("isRowLayout", options.isRowLayout)
+
+        // Get max width setting
+        options.hasWidthLimit = form.hasWidthLimitCheckbox.state() === NSOnState
+        Settings.setSettingForKey("hasWidthLimit", options.hasWidthLimit)
+
+        // Get width value
+        let maxWidthTextFieldInput = form.maxWidthTextField.stringValue()
+        let maxWidthValue = parseInt(maxWidthTextFieldInput)
+
+        if (isNaN(maxWidthValue) || maxWidthTextFieldInput === "") {
+            UI.message(
+                "⚠️ The maximum width was not changed. Try entering a number."
+            )
+        } else if (maxWidthValue < 10 || maxWidthValue > 10000) {
+            UI.message("⚠️ Enter a maximum width between 10 and 10,000")
+        } else {
+            options.maxWidth = maxWidthValue
+            Settings.setSettingForKey("maxWidth", maxWidthValue)
+        }
+    }
+}
+
+function createDialog() {
     const viewWidth = 360
     const viewHeight = 250
 

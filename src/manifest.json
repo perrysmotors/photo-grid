@@ -18,7 +18,7 @@
     {
       "name": "Settings",
       "identifier": "settings",
-      "script": "./photo-grid.js",
+      "script": "./interface.js",
       "handler": "onSettings"
     }
   ],
