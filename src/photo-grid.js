@@ -1,6 +1,5 @@
 import UI from "sketch/ui"
 import DOM from "sketch/dom"
-import Settings from "sketch/settings"
 
 import { options } from "./options"
 

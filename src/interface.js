@@ -7,7 +7,6 @@ const form = {}
 
 export function onSettings(context) {
     const alert = createDialog()
-    console.log("Hi")
     const response = alert.runModal()
 
     if (response == "1000") {
